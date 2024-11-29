@@ -1,9 +1,8 @@
 % Advanced Audio Noise Reduction with Visualization
 
-% Clear workspace
 clear; clc; close all;
 
-% Run the main function
+% main function
 main_noise_reduction();
 
 function main_noise_reduction()
