@@ -1,4 +1,4 @@
-% Advanced Audio Noise Reduction with Visualization
+% Audio Noise Reduction with Visualization
 clear; clc; close all;
 
 % Main function
@@ -71,7 +71,7 @@ function audioFiltered = fft_noise_reduction(audioIn, fs)
 
         % Noise reduction in frequency domain
         freqRes = fs / length(fftFrame);
-        voiceFreqIndices = round((100 / freqRes):(3000 / freqRes));
+        voiceFreqIndices = round((300 / freqRes):(3400 / freqRes));
         magnitude(voiceFreqIndices) = magnitude(voiceFreqIndices) * 1.2; % Boost speech frequencies
         noiseLevel = mean(magnitude(floor(end * 0.75):end)) * 0.5;
         magnitudeProcessed = max(magnitude - noiseLevel, 0.1 * noiseLevel);
