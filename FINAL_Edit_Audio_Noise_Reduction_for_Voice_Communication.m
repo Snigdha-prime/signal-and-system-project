@@ -1,8 +1,7 @@
 % Advanced Audio Noise Reduction with Visualization
-
 clear; clc; close all;
 
-% main function
+% Main function
 main_noise_reduction();
 
 function main_noise_reduction()
@@ -36,45 +35,56 @@ end
 function audioFiltered = advanced_noise_reduction(audioIn, fs)
     % Ensure column vector
     audioIn = audioIn(:);
-    
+
     % Stage 1: FFT-based Noise Reduction
     fftFiltered = fft_noise_reduction(audioIn, fs);
-    
+
     % Stage 2: Wavelet-Based Denoising
     waveletFiltered = wavelet_denoising(fftFiltered, fs);
 
     % Stage 3: High-Decibel Attenuation
     audioFiltered = high_decibel_attenuation(waveletFiltered, fs);
-    
+
     % Final normalization
     audioFiltered = audioFiltered / max(abs(audioFiltered));
 end
 
 function audioFiltered = fft_noise_reduction(audioIn, fs)
-    % FFT-based noise reduction
-    
+    % FFT-based noise reduction using overlap-add for smooth reconstruction
     windowLength = round(0.05 * fs); % 50ms windows
     overlap = round(windowLength * 0.75);
-    paddedSignal = [zeros(floor(windowLength / 2), 1); audioIn; zeros(floor(windowLength / 2), 1)];
-    audioFiltered = zeros(size(paddedSignal));
+    hopSize = windowLength - overlap;
     window = hanning(windowLength);
-    
-    for i = 1:overlap:(length(paddedSignal) - windowLength + 1)
+
+    % Zero-padding and pre-allocate output
+    paddedSignal = [zeros(overlap, 1); audioIn; zeros(overlap, 1)];
+    audioFiltered = zeros(size(paddedSignal));
+
+    for i = 1:hopSize:(length(paddedSignal) - windowLength + 1)
+        % Windowed frame
         frame = paddedSignal(i:i + windowLength - 1) .* window;
+
+        % FFT
         fftFrame = fft(frame);
         magnitude = abs(fftFrame);
         phase = angle(fftFrame);
-        
+
+        % Noise reduction in frequency domain
         freqRes = fs / length(fftFrame);
         voiceFreqIndices = round((100 / freqRes):(3000 / freqRes));
-        magnitude(voiceFreqIndices) = magnitude(voiceFreqIndices) * 1.5;
+        magnitude(voiceFreqIndices) = magnitude(voiceFreqIndices) * 1.2; % Boost speech frequencies
         noiseLevel = mean(magnitude(floor(end * 0.75):end)) * 0.5;
-        magnitudeProcessed = max(magnitude - noiseLevel, 0.2 * magnitude);
+        magnitudeProcessed = max(magnitude - noiseLevel, 0.1 * noiseLevel);
+
+        % Reconstruct frame with original phase
         processedFrame = real(ifft(magnitudeProcessed .* exp(1j * phase)));
-        audioFiltered(i:i + windowLength - 1) = audioFiltered(i:i + windowLength - 1) + processedFrame;
+
+        % Overlap-add synthesis
+        audioFiltered(i:i + windowLength - 1) = audioFiltered(i:i + windowLength - 1) + processedFrame .* window;
     end
-    
-    audioFiltered = audioFiltered(floor(windowLength / 2) + 1:end - floor(windowLength / 2));
+
+    % Remove padding
+    audioFiltered = audioFiltered(overlap + 1:end - overlap);
 end
 
 function denoisedAudio = wavelet_denoising(audioIn, fs)
