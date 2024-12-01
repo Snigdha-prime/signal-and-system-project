@@ -151,8 +151,8 @@ function generate_figures(audioIn, audioFiltered, fs)
     % 4. Wavelet Coefficients
     waveletName = 'db6';
     decompositionLevel = 5;
-    [COriginal, LOriginal] = wavedec(audioIn, decompositionLevel, waveletName);
-    [CFiltered, LFiltered] = wavedec(audioFiltered, decompositionLevel, waveletName);
+    [COriginal, ~] = wavedec(audioIn, decompositionLevel, waveletName);
+    [CFiltered, ~] = wavedec(audioFiltered, decompositionLevel, waveletName);
     figure;
     subplot(2, 1, 1);
     plot(COriginal);
